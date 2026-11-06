@@ -2,9 +2,11 @@
 # and publishes it to GitHub Pages.
 name: Deploy demo to GitHub Pages
 
+# Manual for now: GitHub Pages isn't enabled for this repo yet, and the demo is
+# currently published from tferg7/tferg7.github.io. To use this workflow instead,
+# set Settings -> Pages -> Source to "GitHub Actions", then run it from the Actions tab
+# (and add back a push trigger if you want it to run on every push).
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
