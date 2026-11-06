@@ -4,7 +4,7 @@ import { useMutation } from '@apollo/client';
 import { SAVE_BOOK } from '../utils/mutations';
 import Auth from '../utils/auth';
 import { DEMO, saveDemoBook, getDemoBooks } from '../utils/demo';
-import { searchGoogleBooks } from '../utils/API';
+import { searchBooks } from '../utils/API';
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
 
 const SearchBooks = () => {
@@ -12,6 +12,8 @@ const SearchBooks = () => {
   const [searchedBooks, setSearchedBooks] = useState([]);
   // create state for holding our search field data
   const [searchInput, setSearchInput] = useState('');
+  // message shown when a search fails or finds nothing
+  const [searchError, setSearchError] = useState('');
 
   // create state to hold saved bookId values
   const [savedBookIds, setSavedBookIds] = useState(DEMO ? getDemoBooks().map((b) => b.bookId) : getSavedBookIds());
@@ -33,27 +35,15 @@ const SearchBooks = () => {
     }
 
     try {
-      const response = await searchGoogleBooks(searchInput);
-
-      if (!response.ok) {
-        throw new Error('something went wrong!');
-      }
-
-      const { items = [] } = await response.json();
-
-      const bookData = items.map((book) => ({
-        bookId: book.id,
-        authors: book.volumeInfo.authors || ['No author to display'],
-        title: book.volumeInfo.title,
-        description: book.volumeInfo.description,
-        image: book.volumeInfo.imageLinks?.thumbnail || '',
-        link: book.volumeInfo.infoLink || '',
-      }));
+      setSearchError('');
+      const bookData = await searchBooks(searchInput);
 
       setSearchedBooks(bookData);
       setSearchInput('');
+      if (!bookData.length) setSearchError('No books found. Try another search.');
     } catch (error) {
       console.error(error);
+      setSearchError('Search is unavailable right now. Please try again in a minute.');
     }
   };
 
@@ -112,7 +102,7 @@ const SearchBooks = () => {
         <h2>
           {searchedBooks.length
             ? `Viewing ${searchedBooks.length} results:`
-            : 'Search for a book to begin'}
+            : searchError || 'Search for a book to begin'}
         </h2>
         <CardColumns>
           {searchedBooks.map((book) => {
