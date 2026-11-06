@@ -1,0 +1,49 @@
+# Builds the React client in demo mode (no server; saved books stay in the browser)
+# and publishes it to GitHub Pages.
+name: Deploy demo to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    defaults:
+      run:
+        working-directory: mernbooksearch/client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mernbooksearch/client/package-lock.json
+      - run: npm ci
+      - name: Build demo
+        run: npm run build
+        env:
+          CI: true
+          REACT_APP_DEMO: "true"
+          PUBLIC_URL: /mernbooksearch
+      # lets links like /mernbooksearch/saved load the app instead of a 404
+      - run: cp build/index.html build/404.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: mernbooksearch/client/build
+      - id: deployment
+        uses: actions/deploy-pages@v4

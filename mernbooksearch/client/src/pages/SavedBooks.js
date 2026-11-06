@@ -1,17 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Jumbotron, Container, CardColumns, Card, Button } from 'react-bootstrap';
 import { useMutation, useQuery } from '@apollo/client';
 import { QUERY_ME } from '../utils/queries';
 import { REMOVE_BOOK } from '../utils/mutations';
 import Auth from '../utils/auth';
 import { removeBookId } from '../utils/localStorage';
+import { DEMO, getDemoBooks, removeDemoBook } from '../utils/demo';
 
 const SavedBooks = () => {
-  const { loading, data } = useQuery(QUERY_ME);
+  // the demo has no server, so skip the query and read books from localStorage
+  const { loading, data } = useQuery(QUERY_ME, { skip: DEMO });
   const [removeBook] = useMutation(REMOVE_BOOK);
+  const [demoBooks, setDemoBooks] = useState(DEMO ? getDemoBooks() : []);
 
   const userData = data?.me || {};
-  const savedBooks = userData.savedBooks || [];
+  const savedBooks = DEMO ? demoBooks : userData.savedBooks || [];
 
   // delete the book from the user's account by its Google Books id
   const handleDeleteBook = async (bookId) => {
@@ -20,6 +23,12 @@ const SavedBooks = () => {
     }
 
     try {
+      if (DEMO) {
+        removeDemoBook(bookId);
+        setDemoBooks(getDemoBooks());
+        removeBookId(bookId);
+        return;
+      }
       // the response updates the cached `me` query, so the list re-renders
       await removeBook({ variables: { bookId } });
       // upon success, remove book's id from localStorage

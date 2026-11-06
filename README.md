@@ -1,6 +1,8 @@
 # mernbooksearch
 
 ## Description
+**Live demo: https://tferg7.github.io/mernbooksearch/** (runs without the server; saved books stay in your browser)
+
 A Google Books search app built with the MERN stack and GraphQL. Search for books, sign up or log in, and save books to your account.
 
 ## Table of Contents
